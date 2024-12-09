@@ -1,3 +1,9 @@
 .react-resizable {
   position: absolute;
 }
+
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+  cursor: ew-resize;
+  opacity: 0;
+}

@@ -1,5 +1,4 @@
 import {
-  Text,
   Card,
   Input,
   CardBody,
@@ -44,7 +43,7 @@ const TextEditor = ({
             name="fontsize"
             value={textInfo.fontSize}
             min={12}
-            max={50}
+            max={80}
           >
             <NumberInputField />
             <NumberInputStepper>

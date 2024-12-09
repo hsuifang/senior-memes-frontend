@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Box, Card, CardBody, Button, Text } from "@chakra-ui/react";
-import DesignCanvas from "./components/DesignCanvas";
+import DesignCanvas, { DesignCanvasRef } from "./components/DesignCanvas";
 import TextEditor from "./components/TextEditor";
 import { ITextInfo } from "./types/textEditor";
 import { AddIcon } from "@chakra-ui/icons";
@@ -10,6 +11,7 @@ const Home = () => {
   // if queryString has no id then show upload image button
   const [editTextInfo, setEditTextInfo] = useState<ITextInfo | null>(null);
   const [userTextInfo, setUserTextInfo] = useState<ITextInfo[]>([]);
+  const designCanvasRef = useRef<DesignCanvasRef>(null);
 
   const handleAddText = () => {
     const newText: ITextInfo = {
@@ -17,8 +19,8 @@ const Home = () => {
       text: `新文字${Date.now().toString().slice(5, 8)}`,
       x: 200, // Starting position
       y: -200,
-      fontSize: 20,
-      color: "black",
+      fontSize: 40,
+      color: "white",
     };
     setUserTextInfo([...userTextInfo, newText]);
   };
@@ -36,6 +38,33 @@ const Home = () => {
     setEditTextInfo(textInfo);
   };
 
+  // TODO: upload image
+  const handleUploadImage = async () => {
+    console.log("upload modified image");
+    try {
+      await designCanvasRef.current?.downloadCanvas();
+    } catch (error) {
+      console.error("Error downloading image:", error);
+    }
+  };
+
+  const handleDeleteText = (id: string) => {
+    const newTextInfo = userTextInfo.filter((txt) => txt.id !== id);
+    setUserTextInfo(newTextInfo);
+    setEditTextInfo(null);
+  };
+
+  // if quuery string has imageId then call api to get image
+  const [searchParams] = useSearchParams();
+  const imageId = searchParams.get("imageId");
+
+  useEffect(() => {
+    if (imageId) {
+      // call api to get image
+      console.log(imageId);
+    }
+  }, [imageId]);
+
   return (
     <Box
       as="main"
@@ -46,19 +75,22 @@ const Home = () => {
       alignItems="center"
     >
       {/* TODO: 4. Upload Modify Image Button*/}
+      <Button onClick={handleUploadImage}>上傳修改圖片</Button>
       <Card>
         <CardBody>
           {/* 1. Canva Image */}
           <Box
             as="section"
             data-testid="canvas-section"
-            display="flex"
-            justifyContent="center"
+            border="3px dashed #ccc"
+            padding={2}
           >
             <DesignCanvas
+              ref={designCanvasRef}
               imageUrl="https://picsum.photos/500/500"
               textInfo={userTextInfo}
               onTextInfoChange={setEditTextInfo}
+              onDeleteText={handleDeleteText}
             />
           </Box>
           {/* 2. TextEditor */}
