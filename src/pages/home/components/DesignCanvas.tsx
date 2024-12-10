@@ -1,54 +1,179 @@
-import { useState, forwardRef, useRef, useImperativeHandle } from "react";
+import {
+  useState,
+  forwardRef,
+  useRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
 import html2canvas from "html2canvas";
-import { Box, Button, Image, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import Draggable from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css"; // Add this for default styling
 import "./canvas.css";
 import { ITextInfo } from "../types/textEditor";
 import { DeleteIcon } from "@chakra-ui/icons";
+import { useGesture } from "@use-gesture/react";
+
 export interface DesignCanvasRef {
   downloadCanvas: () => Promise<void>;
 }
+interface DesignCanvasProps {
+  imageUrl: string;
+  textInfo: ITextInfo[];
+  onTextInfoChange: (textInfo: ITextInfo | null) => void;
+  onDeleteText: (id: string) => void;
+  onScaleChange: (scale: number) => void;
+  scale?: number;
+}
+
 const DesignCanvas = forwardRef(
   (
     {
       imageUrl,
       textInfo,
+      scale = 1,
       onTextInfoChange,
+      onScaleChange,
       onDeleteText,
-    }: {
-      imageUrl: string;
-      textInfo: ITextInfo[];
-      onTextInfoChange: (textInfo: ITextInfo | null) => void;
-      onDeleteText: (id: string) => void;
-    },
+    }: DesignCanvasProps,
     ref
   ) => {
     // Image
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const imageRef = useRef<HTMLImageElement>(null);
-    const [boxWidth, setBoxWidth] = useState(300);
+    const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+
+    const [boxWidth, setBoxWidth] = useState(100);
     const [boxHeight, setBoxHeight] = useState(100);
 
     const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+    const CANVAS_SIZE = 300; // Fixed size for mobile
+
+    useEffect(() => {
+      const image = new window.Image();
+      image.crossOrigin = "anonymous";
+      image.src = imageUrl;
+      image.onload = () => {
+        setImageObj(image);
+        drawCanvas(image, scale, position);
+      };
+    }, [imageUrl]);
+
+    // Draw canvas whenever scale or position changes
+    const drawCanvas = (
+      image: HTMLImageElement,
+      currentScale: number,
+      currentPosition: { x: number; y: number }
+    ) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+      if (!ctx) return;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Save current context state
+      ctx.save();
+
+      // Move to center of canvas
+      // ctx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+      ctx.translate(Math.round(CANVAS_SIZE / 2), Math.round(CANVAS_SIZE / 2));
+
+      // Apply scale
+      ctx.scale(currentScale, currentScale);
+
+      // Apply position (normalized by scale)
+      ctx.translate(
+        currentPosition.x / currentScale,
+        currentPosition.y / currentScale
+      );
+
+      // Calculate dimensions to maintain aspect ratio
+      const aspectRatio = image.width / image.height;
+      let drawWidth = CANVAS_SIZE;
+      let drawHeight = CANVAS_SIZE;
+
+      if (aspectRatio > 1) {
+        drawHeight = drawWidth / aspectRatio;
+      } else {
+        drawWidth = drawHeight * aspectRatio;
+      }
+
+      // Draw image centered
+      ctx.drawImage(
+        image,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight
+      );
+
+      // Restore context state
+      ctx.restore();
+
+      // Draw text elements
+      drawTextElements(ctx);
+    };
+
+    const drawTextElements = (ctx: CanvasRenderingContext2D) => {
+      textInfo.forEach((txt) => {
+        ctx.save();
+        ctx.font = `${txt.fontSize}px monospace`;
+        ctx.fillStyle = txt.color;
+        ctx.fillText(txt.text, txt.x, txt.y);
+        ctx.restore();
+      });
+    };
+
+    // Gesture handling
+    useGesture(
+      {
+        onPinch: ({ offset: [d], event }) => {
+          event.preventDefault();
+          const newScale = Math.max(0.1, Math.min(3, d));
+          onScaleChange(newScale);
+          if (imageObj) {
+            drawCanvas(imageObj, newScale, position);
+          }
+        },
+        onDrag: ({ offset: [x, y] }) => {
+          const newPosition = { x, y };
+          setPosition(newPosition);
+          if (imageObj) {
+            drawCanvas(imageObj, scale, newPosition);
+          }
+        },
+      },
+      {
+        // @ts-expect-error
+        target: canvasRef.current,
+        eventOptions: { passive: false },
+      }
+    );
 
     const handleClearTextEditing = async () => {
       setSelectedTextId(null);
       onTextInfoChange(null);
     };
 
-    const canvasRef = useRef(null);
-
     useImperativeHandle(ref, () => {
       return {
         downloadCanvas: async () => {
-          if (!canvasRef.current) return;
+          if (!imageRef.current) return;
           try {
             // clear selected text
             await handleClearTextEditing();
-            const canvas = await html2canvas(canvasRef.current, {
+            // Wait a bit for the UI to update
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(imageRef.current, {
               useCORS: true,
               allowTaint: true,
+              scale: 2, // Increase quality of the output
             });
             const link = document.createElement("a");
             link.download = `meme-${Date.now()}.png`;
@@ -62,12 +187,32 @@ const DesignCanvas = forwardRef(
     });
 
     return (
-      <Box ref={canvasRef} position="relative" onClick={handleClearTextEditing}>
-        <Box width={500}>
-          <Image ref={imageRef} src={imageUrl} alt="meme" width="100%" />
-        </Box>
+      <Box
+        ref={imageRef}
+        position="relative"
+        onClick={handleClearTextEditing}
+        overflow="hidden"
+        width="299px"
+        height="299px"
+      >
+        <canvas
+          ref={canvasRef}
+          width={CANVAS_SIZE}
+          height={CANVAS_SIZE}
+          style={{
+            touchAction: "none", // Important for gesture handling
+            display: "block",
+          }}
+        />
         {textInfo.map((txt) => (
-          <Draggable key={txt.id} defaultPosition={{ x: txt.x, y: txt.y }}>
+          <Draggable
+            key={txt.id}
+            defaultPosition={{ x: txt.x, y: txt.y }}
+            onDrag={(_, data) => {
+              const updatedText = { ...txt, x: data.x, y: data.y };
+              onTextInfoChange(updatedText);
+            }}
+          >
             {/* BUG: 每一個 TEXT 的寬度是獨立的 */}
             <ResizableBox
               width={boxWidth}

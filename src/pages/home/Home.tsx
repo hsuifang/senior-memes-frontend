@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Box, Card, CardBody, Button, Text } from "@chakra-ui/react";
+import { Box, Card, CardBody, Button, Text, Input } from "@chakra-ui/react";
 import DesignCanvas, { DesignCanvasRef } from "./components/DesignCanvas";
 import TextEditor from "./components/TextEditor";
 import { ITextInfo } from "./types/textEditor";
@@ -12,6 +12,23 @@ const Home = () => {
   const [editTextInfo, setEditTextInfo] = useState<ITextInfo | null>(null);
   const [userTextInfo, setUserTextInfo] = useState<ITextInfo[]>([]);
   const designCanvasRef = useRef<DesignCanvasRef>(null);
+  // 1. scale
+  const [scale, setScale] = useState(1);
+  const [imageUrl, setImageUrl] = useState("");
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // get the file from the e.target
+    // reader the file and set file to imageUrl
+    //   => new Filereader
+    //   => reader.readAsDataURL / reader.onload
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddText = () => {
     const newText: ITextInfo = {
@@ -40,7 +57,6 @@ const Home = () => {
 
   // TODO: upload image
   const handleUploadImage = async () => {
-    console.log("upload modified image");
     try {
       await designCanvasRef.current?.downloadCanvas();
     } catch (error) {
@@ -52,6 +68,11 @@ const Home = () => {
     const newTextInfo = userTextInfo.filter((txt) => txt.id !== id);
     setUserTextInfo(newTextInfo);
     setEditTextInfo(null);
+  };
+
+  // Add handler for scale changes
+  const handleScaleChange = (newScale: number) => {
+    setScale(newScale);
   };
 
   // if quuery string has imageId then call api to get image
@@ -66,16 +87,9 @@ const Home = () => {
   }, [imageId]);
 
   return (
-    <Box
-      as="main"
-      bgColor="gray.100"
-      height="100vh"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-    >
+    <Box as="main" display="flex" flexDirection="column" alignItems="center">
       {/* TODO: 4. Upload Modify Image Button*/}
-      <Button onClick={handleUploadImage}>上傳修改圖片</Button>
+      <Button onClick={handleUploadImage}>修改圖片</Button>
       <Card>
         <CardBody>
           {/* 1. Canva Image */}
@@ -87,10 +101,12 @@ const Home = () => {
           >
             <DesignCanvas
               ref={designCanvasRef}
-              imageUrl="https://picsum.photos/500/500"
+              imageUrl={imageUrl}
               textInfo={userTextInfo}
               onTextInfoChange={setEditTextInfo}
               onDeleteText={handleDeleteText}
+              scale={scale}
+              onScaleChange={handleScaleChange}
             />
           </Box>
           {/* 2. TextEditor */}
@@ -121,6 +137,18 @@ const Home = () => {
             />
           )}
           {/* TODO: 3. Upload Image Button*/}
+
+          {/* Add upload button refer to input type=file */}
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            display="none"
+            id="image-upload"
+          />
+          <Button as="label" htmlFor="image-upload">
+            HA
+          </Button>
         </CardBody>
       </Card>
     </Box>
