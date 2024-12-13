@@ -7,3 +7,8 @@
   cursor: ew-resize;
   opacity: 0;
 }
+
+* {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}

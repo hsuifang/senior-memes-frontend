@@ -5,4 +5,6 @@ export interface ITextInfo {
   fontSize: number;
   x: number;
   y: number;
+  fontFamily?: string;
+  direction?: string;
 }
