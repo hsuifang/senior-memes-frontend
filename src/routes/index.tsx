@@ -15,6 +15,7 @@ const RouterElement = () => (
   <>
     <Route path="/" element={<Layout />}>
       <Route index element={<Home />} />
+      <Route path="/editImage" element={<Home />} />
     </Route>
 
     <Route path="*" element={<NotFound />} />
