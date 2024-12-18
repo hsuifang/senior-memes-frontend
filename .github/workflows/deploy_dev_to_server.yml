@@ -1,4 +1,4 @@
-name: 部署到SERVER
+name: 部署dev frontend 到 SERVER
 
 on:
   workflow_dispatch:
