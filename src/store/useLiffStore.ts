@@ -22,21 +22,17 @@ export const useLiffStore = create<ILiffState>((set) => ({
       await liff.init({ liffId: import.meta.env.VITE_LIFF_ID });
       set({ isLiffReady: true });
       set({ errorMsg: null });
+      liff.ready.then(() => {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        }
+        set({ isLoggedIn: liff.isLoggedIn() });
+      });
     } catch (error) {
       set({
         errorMsg: error instanceof Error ? error.message : "Liff 初始化失敗",
       });
     }
-    // TODO: 這裡的 ready 是什麼？
-    liff.ready.then(() => {
-      // console.log(liff.getOS());
-      // console.log(liff.getContext());
-      // console.log(liff.isLoggedIn());
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      }
-      set({ isLoggedIn: liff.isLoggedIn() });
-    });
   },
   getIDToken: () => {
     try {
