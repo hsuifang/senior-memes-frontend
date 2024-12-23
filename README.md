@@ -4,9 +4,9 @@
 
 ## 📷 Screenshot
 
-<!-- <p align="center">
+<p align="center">
 <img src="./public/screenshot01.png" height="200px" alt="介面模式" />
-</p> -->
+</p>
 
 ## ✨ Features
 
