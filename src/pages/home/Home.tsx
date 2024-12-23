@@ -3,7 +3,6 @@ import DesignCanvas from "./components/DesignCanvas/DesignCanvas";
 import TextEditor from "./components/TextEditor";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import ControlPanel from "./components/ControlPanel";
-import InstructionList from "./components/InstructionList";
 import useHomeLogic from "./hooks/useHomeLogic";
 
 const Home = () => {
@@ -61,8 +60,6 @@ const Home = () => {
               canAddMoreText={canAddMoreText}
               canGenerateImage={canGenerateImage}
             />
-            {/* 3. 指令列表 */}
-            <InstructionList />
 
             {/* 2. TextEditor */}
             {editTextInfo && (

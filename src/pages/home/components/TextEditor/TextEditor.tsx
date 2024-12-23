@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Box } from "@chakra-ui/react";
 import { ITextInfo } from "../../types/textEditor";
 import Slider from "../Slider/Slider";
@@ -33,6 +34,8 @@ const ActionBar = ({ onCancel, onSave }: ActionBarProps) => (
 
 const TextEditor = ({ textInfo, onFinish, onCancel }: TextEditorProps) => {
   const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+
   const TextWidth =
     screenWidth > 500 ? Math.min(screenWidth, 520) : screenWidth - 20;
 
@@ -44,8 +47,19 @@ const TextEditor = ({ textInfo, onFinish, onCancel }: TextEditorProps) => {
     onFinish({ ...textInfo, ...content });
   };
 
+  // Add useEffect to handle body scroll
+  useEffect(() => {
+    // Disable scroll when component mounts
+    document.body.style.overflow = "hidden";
+
+    // Re-enable scroll when component unmounts
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   return (
-    <StyledEditorOverlay>
+    <StyledEditorOverlay height={screenHeight}>
       <StyledEditorContainer>
         <ActionBar onCancel={onCancel} onSave={updatedEdit} />
 

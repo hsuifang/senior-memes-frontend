@@ -2,7 +2,9 @@ import { Box, Input } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 
 export const StyledEditorOverlay = styled(Box)`
-  position: absolute;
+  width: 100%;
+  height: ${(props) => props.height + "px"};
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -11,10 +13,12 @@ export const StyledEditorOverlay = styled(Box)`
 `;
 
 export const StyledEditorContainer = styled(Box)`
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
+  padding: 1rem 1rem 3rem 1rem;
 `;
 
 export const StyledActionBar = styled(Box)`

@@ -2,7 +2,7 @@ import { List, ListItem, Text } from "@chakra-ui/react";
 
 const InstructionList = () => {
   return (
-    <List w="100%" pt={8}>
+    <List w="100%">
       {[
         "點擊文字可以編輯樣式及顏色",
         "可以放大縮小圖片",

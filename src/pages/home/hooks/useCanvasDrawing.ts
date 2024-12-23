@@ -4,7 +4,7 @@ interface UseCanvasDrawingProps {
   imageUrl: string;
   scale: number;
   position: { x: number; y: number };
-  canvasSize: number;
+  canvasSize: { width: number; height: number };
 }
 
 export const useCanvasDrawing = ({
@@ -35,8 +35,7 @@ export const useCanvasDrawing = ({
     ctx.save();
 
     // Move to center of canvas
-    // ctx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
-    ctx.translate(Math.round(canvasSize / 2), Math.round(canvasSize / 2));
+    ctx.translate(canvasSize.width / 2, canvasSize.height / 2);
 
     // Apply scale
     ctx.scale(currentScale, currentScale);
@@ -48,15 +47,8 @@ export const useCanvasDrawing = ({
     );
 
     // Calculate dimensions to maintain aspect ratio
-    const aspectRatio = image.width / image.height;
-    let drawWidth = canvasSize;
-    let drawHeight = canvasSize;
-
-    if (aspectRatio > 1) {
-      drawHeight = drawWidth / aspectRatio;
-    } else {
-      drawWidth = drawHeight * aspectRatio;
-    }
+    let drawWidth = canvasSize.width;
+    let drawHeight = canvasSize.height;
 
     // Draw image centered
     ctx.drawImage(
