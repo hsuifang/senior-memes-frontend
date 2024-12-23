@@ -3,14 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import { useLiffStore } from "@/store/useLiffStore";
 import { getImage, saveImage } from "../service/api";
 import { ITextInfo } from "../types/textEditor";
-import liff from "@line/liff";
 import { DesignCanvasRef } from "../components/DesignCanvas/DesignCanvas";
 
 const useHomeLogic = () => {
   // All states
   const [searchParams] = useSearchParams();
   const imageId = searchParams.get("imageId");
-  const { getIDToken, idToken } = useLiffStore();
+  const { getIDToken, idToken, sendMessage, closeLiffWindow } = useLiffStore();
   const [isLoading, setIsLoading] = useState(false);
   const [editTextInfo, setEditTextInfo] = useState<ITextInfo | null>(null);
   const [userTextInfo, setUserTextInfo] = useState<ITextInfo[]>([]);
@@ -57,18 +56,13 @@ const useHomeLogic = () => {
 
       if (imageBlob && idToken && imageId) {
         await saveImage(imageBlob, idToken, imageId);
-        await liff.sendMessages([
-          {
-            type: "text",
-            text: "長輩圖製作完成！",
-          },
-        ]);
-        liff.closeWindow();
+        await sendMessage("長輩圖製作完成！");
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      await sendMessage((error as Error).message || "發生錯誤");
     } finally {
       setIsLoading(false);
+      closeLiffWindow();
     }
   };
 

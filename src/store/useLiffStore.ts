@@ -9,6 +9,8 @@ interface ILiffState {
   errorMsg: string | null;
   initLiff: () => void;
   getIDToken: () => void;
+  sendMessage: (message: string) => void;
+  closeLiffWindow: () => void;
 }
 
 export const useLiffStore = create<ILiffState>((set) => ({
@@ -42,5 +44,20 @@ export const useLiffStore = create<ILiffState>((set) => ({
         errorMsg: error instanceof Error ? error.message : "取得 ID Token 失敗",
       });
     }
+  },
+  sendMessage: async (message: string) => {
+    try {
+      await liff.sendMessages([
+        {
+          type: "text",
+          text: message,
+        },
+      ]);
+    } catch (error) {
+      // do nothing
+    }
+  },
+  closeLiffWindow: () => {
+    liff.closeWindow();
   },
 }));
