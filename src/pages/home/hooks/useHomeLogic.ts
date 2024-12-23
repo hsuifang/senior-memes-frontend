@@ -72,6 +72,16 @@ const useHomeLogic = () => {
     }
   };
 
+  const handleDownloadImage = async () => {
+    const imageBlob = await designCanvasRef.current?.getCanvas();
+    if (imageBlob && idToken && imageId) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(imageBlob);
+      a.download = "image.png";
+      a.click();
+    }
+  };
+
   const fetchMemeImage = async (imageId: string) => {
     if (!idToken) return;
     try {
@@ -122,7 +132,7 @@ const useHomeLogic = () => {
     handleDeleteText,
     handleScaleChange,
     setEditTextInfo,
-
+    handleDownloadImage,
     // Computed values
     canAddMoreText: userTextInfo.length < 10,
     canGenerateImage: userTextInfo.length > 0,
